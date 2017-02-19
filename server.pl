@@ -6,7 +6,6 @@ use threads;
 $| = 1;
 
 my ($socket,$client_socket,$data);
-my ($peeraddress,$peerport);
 
 $socket = new IO::Socket::INET (
 LocalHost => '127.0.0.1',
