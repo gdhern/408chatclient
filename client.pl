@@ -5,10 +5,10 @@ use threads;
 
 $| = 1;
 
-print "LOGIN\nUsername: ";
-chomp($username = <STDIN>);
+my ($socket,$client_socket,$data,$userName);
 
-my ($socket,$client_socket,$data);
+print "LOGIN\nUsername: ";
+chomp($userName = <STDIN>);
 
 $socket = new IO::Socket::INET (
 PeerHost => '127.0.0.1',
@@ -17,7 +17,7 @@ Proto => 'tcp',
 ) or die "ERROR in Socket Creation : $!\n";
 
 print "Connected to Chat Server\n";
-$socket->send($username);
+$socket->send($userName);
 
 sub recvAndPrint{
     threads->create(sub{
@@ -27,17 +27,15 @@ sub recvAndPrint{
     });
 }
 
-sub end(){
-    print "exiting";
-    exit();
+sub userInput{
+    if ($message eq "e"){$socket->send("e");exit();}
+    else{$socket->send("$userName> $message");}
 }
 
 while(1)
 {
     recvAndPrint();
-    print "(e to exit)> ";
-    $message = <STDIN>;
-    exit 0 if $message eq 'e';
-    $socket->send("$username> $message");
+    chomp($message = <STDIN>);
+    userInput();
 }
 $socket->close();
