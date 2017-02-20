@@ -25,16 +25,22 @@ print "SERVER Waiting for client connection on port 22222\n";
 
 sub process {
   my $data;
-  my ($lclient) = @_;
+  my ($lclient, $lfileno) = @_;
   print $lclient "Welcome to server\n";
   while(1){
     $lclient->recv($tName, 1024);
     $lclient->recv($message, 1024);
       if($message eq "e"){
-          $iter=0;
-          $iter++ until $lclient == @clients[$iter];
-          print "$tName disconnected.\n";
-          splice(@clients,$iter,1);
+          # $iter=0;
+          # $iter++ until $lfileno == @clients[$iter];
+          #
+          @clients = grep {$_ !~ $lfileno} @clients;
+          foreach my $fn (@clients){
+              open my $fh, ">&=$fn" or warn $! and die;
+              print "$tName disconnected.\n";
+              print $fh "$tName disconnected.\n";
+          }
+          #splice(@clients,$iter,1);
           threads->exit();
       }
     else{
@@ -57,7 +63,6 @@ while(1)
     print "Client, $name, connected.\n";
     my $fileno = fileno $client_socket;
     push (@clients, $fileno);
-    my $thr = threads->create(\&process, $client_socket)->detach();
+    my $thr = threads->create(\&process, $client_socket, $fileno)->detach();
 }
 $socket->close();
-#$socket->close();
