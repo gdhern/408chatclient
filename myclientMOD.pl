@@ -30,8 +30,8 @@ sub reader {
 my $thr = threads->create(\&reader)->detach();
 
 sub userInput{
-    if ($message eq "e"){$socket->send($userName);$socket->send("e");exit();}
-    else{$socket->send($userName);$socket->send($message);}
+    if ($message eq "e"){$socket->send("e");exit();}
+    else{$socket->send($message);}
 }
 
 while(1)

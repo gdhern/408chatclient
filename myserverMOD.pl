@@ -24,46 +24,42 @@ print "SERVER Waiting for client connection on port 22222\n";
 
 
 sub process {
-  my $data;
-  my ($lclient, $lfileno) = @_;
-  print $lclient "Welcome to server\n";
-  while(1){
-    $lclient->recv($tName, 1024);
-    $lclient->recv($message, 1024);
-      if($message eq "e"){
-          # $iter=0;
-          # $iter++ until $lfileno == @clients[$iter];
-          #
-          @clients = grep {$_ !~ $lfileno} @clients;
-          print "$tName disconnected.\n";
-          foreach my $fn (@clients){
-              open my $fh, ">&=$fn" or warn $! and die;
-              #print "$tName disconnected.\n";
-              print $fh "$tName disconnected.\n";
-          }
-          #splice(@clients,$iter,1);
-          threads->exit();
-      }
-    else{
-        foreach my $fn (@clients){
-            open my $fh, ">&=$fn" or warn $! and die;
-            print $fh "$tName> $message \n";
+    my $data;
+    my ($lname, $lclient, $lfileno) = @_;
+    print "$lname Connected.\n";
+    print $lclient "Welcome to server\n";
+    foreach my $fn (@clients){
+        open my $fh, ">&=$fn" or warn $! and die;
+        print $fh "$lname Connected.\n";
+    }
+    while(1){
+        $lclient->recv($message, 1024);
+        if($message eq "e"){
+            @clients = grep {$_ !~ $lfileno} @clients;
+            print "$lname disconnected.\n";
+            foreach my $fn (@clients){
+                open my $fh, ">&=$fn" or warn $! and die;
+                print $fh "$lname disconnected.\n";
+            }
+            #splice(@clients,$iter,1);
+            threads->exit();
+        }
+        else{
+            foreach my $fn (@clients){
+                open my $fh, ">&=$fn" or warn $! and die;
+                print $fh "$lname> $message \n";
+            }
         }
     }
-    #$lclient->send($data);
-    #print "$data\n";
-  }
-  close($lclient);
-  #@clients = grep {$_ !~ $lfileno} @clients;
+    close($lclient);
 }
 
 while(1)
 {
     my $client_socket = $socket->accept();
     $client_socket->recv($name, 1024);
-    print "Client, $name, connected.\n";
     my $fileno = fileno $client_socket;
     push (@clients, $fileno);
-    my $thr = threads->create(\&process, $client_socket, $fileno)->detach();
+    my $thr = threads->create(\&process, $name, $client_socket, $fileno)->detach();
 }
 $socket->close();
