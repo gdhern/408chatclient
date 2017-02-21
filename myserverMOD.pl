@@ -35,9 +35,10 @@ sub process {
           # $iter++ until $lfileno == @clients[$iter];
           #
           @clients = grep {$_ !~ $lfileno} @clients;
+          print "$tName disconnected.\n";
           foreach my $fn (@clients){
               open my $fh, ">&=$fn" or warn $! and die;
-              print "$tName disconnected.\n";
+              #print "$tName disconnected.\n";
               print $fh "$tName disconnected.\n";
           }
           #splice(@clients,$iter,1);
