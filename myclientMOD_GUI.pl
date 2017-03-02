@@ -19,14 +19,11 @@ $message = "";
 # Main Window
 my $mw = MainWindow->new(-height => 600, -width => 600);
 
+
+
 #Frame for the chatbox display
 my $textFrame = $mw -> Frame(-width => 40, -height => 10);
 
-# $textFrame -> pack;
-
-#Actual textbox for the chat display                              
-# my $textBox = $textFrame -> Text(-background => white);
-# $textBox -> grid(-row => 1, -column => 1, -columnspan => 2, -sticky => "nsew");
 my $textBox = $textFrame-> Scrolled('Text', 
                                     -scrollbars => 'ose',                                    
                                     -background => "white",
@@ -36,22 +33,14 @@ my $button = $mw -> Button(-text => "Send", -command => \&broadcast);
 
 my $entry = $mw -> Entry(-background => "white",
                               -width => 40,
-                              -textvariable => \$message);
-# $eJoshntry -> focus;                              
-
-# my $srl_y = $textFrame -> Scrollbar(-orient=>'v', -command=>[yview => $textBox]);
-# my $srl_x = $textFrame -> Scrollbar(-orient=>'h',-command=>[xview => $textBox]);
-# $textBox -> configure(-yscrollcommand=>['set', $srl_y], 
-# 		-xscrollcommand=>['set',$srl_x]);
-
-# $srl_y -> grid(-row => 1, -column => 3, -sticky => "ns");
-# $srl_x -> grid(-row => 2, -column => 1, -sticky => "ew", -columnspan => 2);
-# $textBox -> grid(-sticky => "nsew");            
+                              -textvariable => \$message);          
             
 tie *STDOUT, 'Tk::Text', $textBox;
-# tie *STDIN, 'Tk::Entry', $entry;
+
+# To send input simply by pressing 'Enter'
 $entry -> bind('<Return>', \&broadcast);
 
+# Give Entry box focus on launch
 $entry -> focus;
 
 
@@ -68,16 +57,22 @@ $mw -> resizable(0,0);
  
 
 
-
+# Sub to broadcast to server
 sub broadcast {
       my $string = $message;
+
+      # If user has not entered anything yet, 
+      # set username to input
       if($userName eq ""){
             $userName = $message;
             print $userName;                                  
       } 
-      print "\n";       
+      print "\n"; 
+
       if ($message eq "e"){$socket->send("e");exit();}
-      else{$socket->send($message);}   
+      else{$socket->send($message);} 
+      
+      #  Clear Entry box
       $entry -> delete(0, 'end');  
 }
 
@@ -91,10 +86,11 @@ PeerPort => '22222',
 Proto => 'tcp',
 ) or die "ERROR in Socket Creation : $!\n";
 
-# print "Connected to Chat Server\n";
+
 print "LOGIN\nUsername: ";
 # $socket->send($userName);
 
+# Sub to read output from server
 sub reader {
   while(1){
     $data = <$socket>;
@@ -104,19 +100,16 @@ sub reader {
 }
 
 
-
+# spawn thread for the server output reader
 my $thr = threads->create(\&reader)->detach();
 
-# sub userInput{
-#     if ($message eq "e"){$socket->send("e");exit();}
-#     else{$socket->send($message);}
-# }
 
-# while(1)
-# {
-#     # chomp($message = <STDIN>);
-#     userInput();
-# }
+# Send exit call to server
+$mw -> OnDestroy(sub {
+  $socket->send("e");
+});
+
+# All Tk gui need this
 MainLoop;
 
 
